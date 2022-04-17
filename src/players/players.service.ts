@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common"
+import { BadRequestException, Injectable } from "@nestjs/common"
 import { InjectModel } from "@nestjs/mongoose"
 import { CreatePlayerDto } from "./dto/create-player.dto"
 import { UpdatePlayerDto } from "./dto/update-player.dto"
@@ -11,8 +11,24 @@ export class PlayersService {
         @InjectModel("Player") private readonly playerModel: Model<Player>
     ) {}
 
-    async create(createPlayerDto: CreatePlayerDto): Promise<Player> {
-        const player = new this.playerModel(createPlayerDto)
+    async create({
+        email,
+        name,
+        phoneNumber
+    }: CreatePlayerDto): Promise<Player> {
+        const playerExists = await this.playerModel.findOne({
+            $or: [{ email }, { phoneNumber }]
+        })
+        if (playerExists) {
+            throw new BadRequestException(
+                `There is already a player using this email or phone number.`
+            )
+        }
+        const player = new this.playerModel({
+            email,
+            name,
+            phoneNumber
+        })
         await player.save()
         return player
     }
@@ -22,28 +38,62 @@ export class PlayersService {
     }
 
     async findById(_id: string): Promise<Player> {
-        return this.playerModel.findById(_id)
+        const player = await this.playerModel.findById(_id)
+        if (!player) throw new BadRequestException("Player not found.")
+        return player
     }
 
     async findByEmail(email: string): Promise<Player> {
-        return this.playerModel.findOne({ email })
+        const player = await this.playerModel.findOne({ email })
+        if (!player) throw new BadRequestException("Player not found.")
+        return player
     }
 
     async update(
         _id: string,
         updatePlayerDto: UpdatePlayerDto
     ): Promise<Player> {
-        const player = await this.playerModel.findByIdAndUpdate(
-            _id,
-            updatePlayerDto
-        )
+        const [player, emailDuplicated, phoneNumberDuplicated] =
+            await Promise.all([
+                this.playerModel.findById(_id),
+                this.playerModel.findOne({ email: updatePlayerDto?.email }),
+                this.playerModel.findOne({
+                    phoneNumber: updatePlayerDto?.phoneNumber
+                })
+            ])
+        if (!player) throw new BadRequestException("Player not found.")
+        if (
+            updatePlayerDto?.email &&
+            _id !== emailDuplicated?._id.toString() &&
+            updatePlayerDto.email === emailDuplicated?.email
+        ) {
+            throw new BadRequestException(
+                `There is already a player using the email ${updatePlayerDto.email}.`
+            )
+        }
+        if (
+            updatePlayerDto?.phoneNumber &&
+            _id !== phoneNumberDuplicated?._id.toString() &&
+            updatePlayerDto.phoneNumber === phoneNumberDuplicated?.phoneNumber
+        ) {
+            throw new BadRequestException(
+                `There is already a player using the phone number ${updatePlayerDto.phoneNumber}.`
+            )
+        }
         for (const key in updatePlayerDto) {
             player[key] = updatePlayerDto[key]
         }
+        await player.save()
         return player
     }
 
-    async remove(_id: string): Promise<void> {
-        return this.playerModel.findByIdAndDelete(_id)
+    async remove(_id: string): Promise<Player> {
+        try {
+            const player = await this.playerModel.findById(_id)
+            if (!player) throw new BadRequestException("Player not found.")
+            return this.playerModel.findByIdAndDelete(_id)
+        } catch {
+            //
+        }
     }
 }

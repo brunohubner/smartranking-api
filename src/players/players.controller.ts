@@ -5,7 +5,9 @@ import {
     Get,
     Param,
     Patch,
-    Post
+    Post,
+    UsePipes,
+    ValidationPipe
 } from "@nestjs/common"
 import { validateEmail } from "src/helpers/validateEmail"
 import { CreatePlayerDto } from "./dto/create-player.dto"
@@ -17,6 +19,7 @@ export class PlayersController {
     constructor(private readonly playersService: PlayersService) {}
 
     @Post()
+    @UsePipes(ValidationPipe)
     create(@Body() createPlayerDto: CreatePlayerDto) {
         return this.playersService.create(createPlayerDto)
     }
