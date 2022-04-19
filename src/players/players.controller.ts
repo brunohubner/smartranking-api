@@ -10,11 +10,11 @@ import {
     ValidationPipe
 } from "@nestjs/common"
 import { validateEmail } from "src/helpers/validateEmail"
-import { CreatePlayerDto } from "./dto/create-player.dto"
-import { UpdatePlayerDto } from "./dto/update-player.dto"
+import { CreatePlayerDto } from "./dtos/create-player.dto"
+import { UpdatePlayerDto } from "./dtos/update-player.dto"
 import { PlayersService } from "./players.service"
 
-@Controller("api/v1/jogadores")
+@Controller("/api/v1/players")
 export class PlayersController {
     constructor(private readonly playersService: PlayersService) {}
 
@@ -38,6 +38,7 @@ export class PlayersController {
     }
 
     @Patch(":_id")
+    @UsePipes(ValidationPipe)
     update(
         @Param() { _id }: { _id: string },
         @Body() updatePlayerDto: UpdatePlayerDto

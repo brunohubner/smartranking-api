@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from "@nestjs/common"
 import { InjectModel } from "@nestjs/mongoose"
-import { CreatePlayerDto } from "./dto/create-player.dto"
-import { UpdatePlayerDto } from "./dto/update-player.dto"
+import { CreatePlayerDto } from "./dtos/create-player.dto"
+import { UpdatePlayerDto } from "./dtos/update-player.dto"
 import { Player } from "./interfaces/player.interface"
 import { Model } from "mongoose"
 
