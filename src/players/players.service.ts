@@ -92,12 +92,8 @@ export class PlayersService {
     }
 
     async remove(_id: string): Promise<Player> {
-        try {
-            const player = await this.playerModel.findById(_id)
-            if (!player) throw new NotFoundException("Player not found.")
-            return this.playerModel.findByIdAndDelete(_id)
-        } catch {
-            //
-        }
+        const player = await this.playerModel.findById(_id)
+        if (!player) throw new NotFoundException("Player not found.")
+        return this.playerModel.findByIdAndDelete(_id)
     }
 }
