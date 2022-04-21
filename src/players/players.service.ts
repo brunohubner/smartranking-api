@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from "@nestjs/common"
+import {
+    BadRequestException,
+    Injectable,
+    NotFoundException
+} from "@nestjs/common"
 import { InjectModel } from "@nestjs/mongoose"
 import { CreatePlayerDto } from "./dtos/create-player.dto"
 import { UpdatePlayerDto } from "./dtos/update-player.dto"
@@ -39,13 +43,13 @@ export class PlayersService {
 
     async findById(_id: string): Promise<Player> {
         const player = await this.playerModel.findById(_id)
-        if (!player) throw new BadRequestException("Player not found.")
+        if (!player) throw new NotFoundException("Player not found.")
         return player
     }
 
     async findByEmail(email: string): Promise<Player> {
         const player = await this.playerModel.findOne({ email })
-        if (!player) throw new BadRequestException("Player not found.")
+        if (!player) throw new NotFoundException("Player not found.")
         return player
     }
 
@@ -61,7 +65,7 @@ export class PlayersService {
                     phoneNumber: updatePlayerDto?.phoneNumber
                 })
             ])
-        if (!player) throw new BadRequestException("Player not found.")
+        if (!player) throw new NotFoundException("Player not found.")
         if (
             updatePlayerDto?.email &&
             _id !== emailDuplicated?._id.toString() &&
@@ -90,7 +94,7 @@ export class PlayersService {
     async remove(_id: string): Promise<Player> {
         try {
             const player = await this.playerModel.findById(_id)
-            if (!player) throw new BadRequestException("Player not found.")
+            if (!player) throw new NotFoundException("Player not found.")
             return this.playerModel.findByIdAndDelete(_id)
         } catch {
             //

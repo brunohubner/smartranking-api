@@ -30,7 +30,7 @@ export class PlayersController {
     }
 
     @Get(":param")
-    findOne(@Param() { param }: { param: string }) {
+    findOne(@Param("param") param: string) {
         if (validateEmail(param)) {
             return this.playersService.findByEmail(param)
         }
@@ -40,14 +40,14 @@ export class PlayersController {
     @Patch(":_id")
     @UsePipes(ValidationPipe)
     update(
-        @Param() { _id }: { _id: string },
+        @Param("_id") _id: string,
         @Body() updatePlayerDto: UpdatePlayerDto
     ) {
         return this.playersService.update(_id, updatePlayerDto)
     }
 
     @Delete(":_id")
-    remove(@Param() { _id }: { _id: string }) {
+    remove(@Param("_id") _id: string) {
         return this.playersService.remove(_id)
     }
 }
