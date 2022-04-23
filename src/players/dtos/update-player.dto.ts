@@ -1,21 +1,24 @@
-import { IsEmail, IsNumber, IsPhoneNumber, IsString } from "class-validator"
+import { IsEmail, IsOptional, IsPhoneNumber, IsString } from "class-validator"
+import { ApiProperty } from "@nestjs/swagger"
 
 export class UpdatePlayerDto {
+    @ApiProperty()
     @IsString()
+    @IsOptional()
     name?: string
 
+    @ApiProperty()
     @IsEmail()
+    @IsOptional()
     email?: string
 
+    @ApiProperty()
     @IsPhoneNumber()
+    @IsOptional()
     phoneNumber?: string
 
+    @ApiProperty()
     @IsString()
-    ranking?: string
-
-    @IsNumber()
-    rankingPosition?: number
-
-    @IsString()
+    @IsOptional()
     urlAvatarPlayer?: string
 }
