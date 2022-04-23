@@ -8,7 +8,7 @@ import { InjectModel } from "@nestjs/mongoose"
 import { Category } from "./interfaces/category.interface"
 import { Model } from "mongoose"
 import { CreateCategoryDto } from "./dtos/create-category.dto"
-import { UpdateCategoryDto } from "./dtos/update-category.dto copy"
+import { UpdateCategoryDto } from "./dtos/update-category.dto"
 import { PlayersService } from "src/players/players.service"
 
 @Injectable()
@@ -30,11 +30,13 @@ export class CategoriesService {
                 `Category ${name} already registered.`
             )
         }
+
         const category = new this.categoryModel({
             description,
             events,
             name
         })
+
         await category.save()
         return category
     }
@@ -44,8 +46,31 @@ export class CategoriesService {
     }
 
     async findById(_id: string): Promise<Category> {
-        const category = await this.categoryModel.findById(_id)
+        const category = await this.categoryModel
+            .findById(_id)
+            .populate("players")
+        if (!category) {
+            throw new NotFoundException(
+                `The category with ID ${_id} do not exists.`
+            )
+        }
+        return category
+    }
+
+    async findByName(category_name: string): Promise<Category> {
+        const category = await this.categoryModel.findOne({
+            name: category_name
+        })
+
         if (!category) throw new NotFoundException("Category not found.")
+        return category
+    }
+
+    async findCategoryOfPlayer(player_id: any): Promise<Category> {
+        const [_player, category] = await Promise.all([
+            this.playersService.findById(player_id),
+            this.categoryModel.findOne().where("players").in(player_id)
+        ])
         return category
     }
 
@@ -53,12 +78,14 @@ export class CategoriesService {
         _id: string,
         updateCategoryDto: UpdateCategoryDto
     ): Promise<Category> {
-        const category = await this.categoryModel.findById(_id)
-        if (!category) throw new NotFoundException("Category not found.")
+        const category = await this.findById(_id)
 
-        for (const key in updateCategoryDto) {
-            category[key] = updateCategoryDto[key]
+        if (updateCategoryDto?.description) {
+            category.description = updateCategoryDto.description
         }
+        updateCategoryDto?.events?.length &&
+            category.events.push(...updateCategoryDto.events)
+
         await category.save()
         return category
     }
@@ -83,8 +110,8 @@ export class CategoriesService {
                 `Player ${player_id} already registred in category ${category_name}.`
             )
         }
+
         categoryExists.players.push(player_id)
-        await categoryExists.save()
-        return categoryExists
+        return categoryExists.save()
     }
 }
